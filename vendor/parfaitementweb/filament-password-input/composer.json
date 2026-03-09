@@ -1,0 +1,65 @@
+{
+    "name": "parfaitementweb/filament-password-input",
+    "description": "Enhanced password input component for filament.",
+    "keywords": [
+        "parfaitementweb",
+        "laravel",
+        "filament-password-input",
+        "filament",
+        "forms",
+        "ui",
+        "password"
+    ],
+    "homepage": "https://github.com/parfaitementweb/filament-password-input",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "filament/forms": "^4.0",
+        "illuminate/contracts": "^11.0|^12.0",
+        "spatie/laravel-package-tools": "^1.14"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.0",
+        "nunomaduro/collision": "^8.0",
+        "orchestra/testbench": "^9.0|^10.0",
+        "pestphp/pest": "^3.7",
+        "pestphp/pest-plugin-laravel": "^3.1",
+        "pestphp/pest-plugin-livewire": "^3.0",
+        "spatie/laravel-ray": "^1.31"
+    },
+    "autoload": {
+        "psr-4": {
+            "Parfaitementweb\\FilamentPasswordInput\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Parfaitementweb\\FilamentPasswordInput\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "@php ./vendor/bin/testbench package:discover --ansi"
+        ],
+        "clear": "@php vendor/bin/testbench package:purge-filament-password-input --ansi",
+        "analyse": "vendor/bin/phpstan analyse",
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Parfaitementweb\\FilamentPasswordInput\\FilamentPasswordInputServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

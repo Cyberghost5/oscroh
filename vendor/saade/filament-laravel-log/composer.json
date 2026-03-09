@@ -1,0 +1,74 @@
+{
+    "name": "saade/filament-laravel-log",
+    "description": "Access laravel.log file through Filament admin panel",
+    "license": "MIT",
+    "keywords": [
+        "saade",
+        "laravel",
+        "filament-laravel-log"
+    ],
+    "authors": [
+        {
+            "name": "Saade",
+            "email": "saade@outlook.com.br",
+            "role": "Developer"
+        }
+    ],
+    "homepage": "https://github.com/saade/filament-laravel-log",
+    "support": {
+        "issues": "https://github.com/saade/filament-laravel-log/issues",
+        "source": "https://github.com/saade/filament-laravel-log"
+    },
+    "require": {
+        "php": "^8.2",
+        "filament/filament": "^4.0",
+        "illuminate/contracts": "^11.0|^12.0",
+        "spatie/laravel-package-tools": "^1.15.0"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.1.0",
+        "laravel/pint": "^1.0",
+        "nunomaduro/collision": "^7.0|^8.0",
+        "orchestra/testbench": "^9.0|^10.0",
+        "pestphp/pest": "^2.0",
+        "pestphp/pest-plugin-arch": "^2.0",
+        "pestphp/pest-plugin-laravel": "^2.0",
+        "phpstan/extension-installer": "^1.1",
+        "phpstan/phpstan-deprecation-rules": "^2.0.1",
+        "phpstan/phpstan-phpunit": "^2.0.4",
+        "spatie/laravel-ray": "^1.26"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "Saade\\FilamentLaravelLog\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Saade\\FilamentLaravelLog\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        },
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Saade\\FilamentLaravelLog\\FilamentLaravelLogServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": "@php ./vendor/bin/testbench package:discover --ansi",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=512M",
+        "format": "vendor/bin/pint",
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage"
+    }
+}
