@@ -57,7 +57,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jsVars', 'admin']], functio
 
 // Home & contact page
 // Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/', [FeedController::class, 'publicIndex'])->name('feed.public');
+Route::get('/', [FeedController::class, 'publicIndex'])->name('home');
 // Route::get('/all-feed', [FeedController::class, 'publicIndex'])->name('feed.public');
 Route::get('/contact', [GenericController::class, 'contact'])->name('contact');
 Route::post('/contact/send', [GenericController::class, 'sendContactMessage'])->name('contact.send');

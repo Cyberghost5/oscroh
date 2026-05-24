@@ -16,7 +16,7 @@
                     <div class="container">
                         <div class="row">
                             <div class="col-lg-7 col-xl-6 mx-auto">
-                                <a href="{{action('HomeController@index')}}">
+                                <a href="{{route('home')}}">
                                     <img class="brand-logo pb-4" src="{{asset( (Cookie::get('app_theme') == null ? (getSetting('site.default_user_theme') == 'dark' ? getSetting('site.dark_logo') : getSetting('site.light_logo')) : (Cookie::get('app_theme') == 'dark' ? getSetting('site.dark_logo') : getSetting('site.light_logo'))) )}}">
                                 </a>
                                 @include('auth.login-form')
