@@ -27,30 +27,30 @@ $(function () {
         $('.error-message').hide();
     });
 
-    $('#headingOne').on('click', function () {
-        if ($('#headingOne').hasClass('collapsed')) {
-            $('.card-header .label-icon').html('<ion-icon name="chevron-up-outline"></ion-icon>');
-        } else {
-            $('.card-header .label-icon').html('<ion-icon name="chevron-down-outline"></ion-icon>');
-        }
-    });
-
     $('#checkout-center').on('show.bs.modal', function (e) {
+        const sanitizeField = function (value, fallback = '') {
+            if (value === undefined || value === null || value === 'undefined' || value === 'null') {
+                return fallback;
+            }
+
+            return value;
+        };
+
         //get data-id attribute of the clicked element
         var postId = $(e.relatedTarget).data('post-id');
         var recipientId = $(e.relatedTarget).data('recipient-id');
         var amount = $(e.relatedTarget).data('amount');
         var type = $(e.relatedTarget).data('type');
         var username = $(e.relatedTarget).data('username');
-        var firstName = $(e.relatedTarget).data('first-name');
-        var lastName = $(e.relatedTarget).data('last-name');
-        var billingAddress = $(e.relatedTarget).data('billing-address');
+        var firstName = sanitizeField($(e.relatedTarget).data('first-name'), $('#paymentFirstName').val());
+        var lastName = sanitizeField($(e.relatedTarget).data('last-name'), $('#paymentLastName').val());
+        var billingAddress = sanitizeField($(e.relatedTarget).data('billing-address'), $('#paymentBillingAddress').val());
         var name = $(e.relatedTarget).data('name');
         var avatar = $(e.relatedTarget).data('avatar');
-        var country = $(e.relatedTarget).data('country');
-        var city = $(e.relatedTarget).data('city');
-        var state = $(e.relatedTarget).data('state');
-        var postcode = $(e.relatedTarget).data('postcode');
+        var country = sanitizeField($(e.relatedTarget).data('country'), $('#paymentCountry').val());
+        var city = sanitizeField($(e.relatedTarget).data('city'), $('#paymentCity').val());
+        var state = sanitizeField($(e.relatedTarget).data('state'), $('#paymentState').val());
+        var postcode = sanitizeField($(e.relatedTarget).data('postcode'), $('#paymentPostcode').val());
         var availableCredit = $(e.relatedTarget).data('available-credit');
         var streamId = $(e.relatedTarget).data('stream-id');
         var userMessageId = $(e.relatedTarget).data('message-id');
@@ -74,8 +74,6 @@ $(function () {
         checkout.updateUserDetails(avatar, username, name);
         checkout.fillCountrySelectOptions();
         checkout.updatePaymentSummaryData();
-        checkout.prefillBillingDetails();
-
         let paymentTitle = '';
         let paymentDescription = '';
         if (type === 'tip' || type === 'chat-tip') {
@@ -148,16 +146,10 @@ $(function () {
             $('.payment-body .payment-description').text(paymentDescription);
         }
 
-        if (!firstName || !lastName || !billingAddress || !city || !state || !postcode || !country) {
-            $('#billingInformation').collapse('show');
-        } else {
-            $('#billingInformation').collapse('hide');
-        }
         $('#checkout-amount').val(amount);
     });
 
     $('#checkout-center').on('hidden.bs.modal', function () {
-        $(this).find('#billing-agreement-form').trigger('reset');
         $('.payment-error').addClass('d-none');
     });
 

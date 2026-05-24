@@ -1,5 +1,32 @@
 <?php
 
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\GenericController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\NotificationsController;
+use App\Http\Controllers\MessengerController;
+use App\Http\Controllers\BookmarksController;
+use App\Http\Controllers\ListsController;
+use App\Http\Controllers\StreamsController;
+use App\Http\Controllers\PaymentsController;
+use App\Http\Controllers\FeedController;
+use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\PostsController;
+use App\Http\Controllers\SubscriptionsController;
+use App\Http\Controllers\WithdrawalsController;
+use App\Http\Controllers\InvoicesController;
+use App\Http\Controllers\AiController;
+use App\Http\Controllers\StoriesController;
+use App\Http\Controllers\SoundsController;
+use App\Http\Controllers\TwoFAController;
+use App\Http\Controllers\StatsController;
+use App\Http\Controllers\InstallerController;
+use App\Http\Controllers\PublicPagesController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -14,35 +41,37 @@
 // Admin routes ( Needs to be placed above )
 
 Route::group(['prefix' => 'admin', 'middleware' => ['jsVars', 'admin']], function () {
-    Route::get('/users/{id}/impersonate', 'UserController@impersonate')->name('admin.impersonate');
-    Route::get('/leave-impersonation', 'UserController@leaveImpersonation')->name('admin.leaveImpersonation');
-    Route::get('/clear-app-cache', 'GenericController@clearAppCache')->name('admin.clear.cache');
-    Route::get('/clear-optimize-cache', 'GenericController@clearOptimizedCache')->name('admin.clear.optimize');
-    Route::get('/create-storage-symlink', 'GenericController@createStorageSymlink')->name('admin.storage.symlink');
+    Route::get('/users/{id}/impersonate', [UserController::class, 'impersonate'])->name('admin.impersonate');
+    Route::get('/leave-impersonation', [UserController::class, 'leaveImpersonation'])->name('admin.leaveImpersonation');
+    Route::get('/clear-app-cache', [GenericController::class, 'clearAppCache'])->name('admin.clear.cache');
+    Route::get('/clear-optimize-cache', [GenericController::class, 'clearOptimizedCache'])->name('admin.clear.optimize');
+    Route::get('/create-storage-symlink', [GenericController::class, 'createStorageSymlink'])->name('admin.storage.symlink');
     Route::get('/generate-sitemap', function () {
         \Artisan::call('generateSitemap');
         return redirect('/sitemap.xml');
     })->name('admin.sitemap.generate');
 
-    Route::post('/withdrawals/{withdrawalId}/approve', 'WithdrawalsController@approveWithdrawal')->name('admin.withdrawals.approve');
-    Route::post('/withdrawals/{withdrawalId}/reject', 'WithdrawalsController@rejectWithdrawal')->name('admin.withdrawals.reject');
+    Route::post('/withdrawals/{withdrawalId}/approve', [WithdrawalsController::class, 'approveWithdrawal'])->name('admin.withdrawals.approve');
+    Route::post('/withdrawals/{withdrawalId}/reject', [WithdrawalsController::class, 'rejectWithdrawal'])->name('admin.withdrawals.reject');
 });
 
 // Home & contact page
-Route::get('/', ['uses' => 'HomeController@index', 'as'   => 'home']);
-Route::get('/contact', ['uses' => 'GenericController@contact', 'as'   => 'contact']);
-Route::post('/contact/send', ['uses' => 'GenericController@sendContactMessage', 'as'   => 'contact.send']);
+// Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/', [FeedController::class, 'publicIndex'])->name('feed.public');
+// Route::get('/all-feed', [FeedController::class, 'publicIndex'])->name('feed.public');
+Route::get('/contact', [GenericController::class, 'contact'])->name('contact');
+Route::post('/contact/send', [GenericController::class, 'sendContactMessage'])->name('contact.send');
 
 // Language switcher route
-Route::get('language/{locale}', ['uses' => 'GenericController@setLanguage', 'as'   => 'language']);
+Route::get('language/{locale}', [GenericController::class, 'setLanguage'])->name('language');
 
 /* Auth Routes + Verify password */
 Auth::routes(['verify'=>true]);
-Route::get('email/verify', ['uses' => 'GenericController@userVerifyEmail', 'as' => 'verification.notice']);
-Route::post('resendVerification', ['uses' => 'GenericController@resendConfirmationEmail', 'as'   => 'verfication.resend']);
+Route::get('email/verify', [GenericController::class, 'userVerifyEmail'])->name('verification.notice');
+Route::post('resendVerification', [GenericController::class, 'resendConfirmationEmail'])->name('verfication.resend');
 // Social Auth login / register
-Route::get('socialAuth/{provider}', ['uses' => 'Auth\LoginController@redirectToProvider', 'as' => 'social.login.start']);
-Route::get('socialAuth/{provider}/callback', ['uses' => 'Auth\LoginController@handleProviderCallback', 'as' => 'social.login.callback']);
+Route::get('socialAuth/{provider}', [LoginController::class, 'redirectToProvider'])->name('social.login.start');
+Route::get('socialAuth/{provider}/callback', [LoginController::class, 'handleProviderCallback'])->name('social.login.callback');
 
 /*
  * (User) Protected routes
@@ -55,287 +84,252 @@ Route::group(['middleware' => ['auth', 'verified', '2fa']], function () {
          * (My) Settings
          */
         // Deposit - Payments
-        Route::post('/settings/deposit/generateStripeSession', [
-            'uses' => 'PaymentsController@generateStripeSession',
-            'as'   => 'settings.deposit.generateStripeSession',
-        ]);
-        Route::post('/settings/flags/save', ['uses' => 'SettingsController@updateFlagSettings', 'as'   => 'settings.flags.save']);
-        Route::post('/settings/profile/save', ['uses' => 'SettingsController@saveProfile', 'as'   => 'settings.profile.save']);
-        Route::post('/settings/rates/save', ['uses' => 'SettingsController@saveRates', 'as'   => 'settings.rates.save']);
-        Route::post('/settings/profile/upload/{uploadType}', ['uses' => 'SettingsController@uploadProfileAsset', 'as'   => 'settings.profile.upload']);
-        Route::post('/settings/profile/remove/{assetType}', ['uses' => 'SettingsController@removeProfileAsset', 'as'   => 'settings.profile.remove']);
-        Route::post('/settings/save', ['uses' => 'SettingsController@updateUserSettings', 'as'   => 'settings.save']);
-        Route::post('/settings/verify/upload', ['uses' => 'SettingsController@verifyUpload', 'as'   => 'settings.verify.upload']);
-        Route::post('/settings/verify/upload/delete', ['uses' => 'SettingsController@deleteVerifyAsset', 'as'   => 'settings.verify.delete']);
-        Route::post('/settings/verify/save', ['uses' => 'SettingsController@saveVerifyRequest', 'as'   => 'settings.verify.save']);
-        Route::get('/settings/privacy/countries', ['uses' => 'SettingsController@getCountries', 'as'   => 'settings.verify.countries']);
-        Route::post('/settings/taxes/save', ['uses' => 'SettingsController@addUserTaxInformation', 'as'   => 'settings.taxes.save']);
+        Route::post('/settings/deposit/generateStripeSession', [PaymentsController::class, 'generateStripeSession'])->name('settings.deposit.generateStripeSession');
+        Route::post('/settings/flags/save', [SettingsController::class, 'updateFlagSettings'])->name('settings.flags.save');
+        Route::post('/settings/profile/save', [SettingsController::class, 'saveProfile'])->name('settings.profile.save');
+        Route::post('/settings/rates/save', [SettingsController::class, 'saveRates'])->name('settings.rates.save');
+        Route::post('/settings/profile/upload/{uploadType}', [SettingsController::class, 'uploadProfileAsset'])->name('settings.profile.upload');
+        Route::post('/settings/profile/remove/{assetType}', [SettingsController::class, 'removeProfileAsset'])->name('settings.profile.remove');
+        Route::post('/settings/save', [SettingsController::class, 'updateUserSettings'])->name('settings.save');
+        Route::post('/settings/verify/upload', [SettingsController::class, 'verifyUpload'])->name('settings.verify.upload');
+        Route::post('/settings/verify/upload/delete', [SettingsController::class, 'deleteVerifyAsset'])->name('settings.verify.delete');
+        Route::post('/settings/verify/save', [SettingsController::class, 'saveVerifyRequest'])->name('settings.verify.save');
+        Route::get('/settings/privacy/countries', [SettingsController::class, 'getCountries'])->name('settings.verify.countries');
+        Route::post('/settings/taxes/save', [SettingsController::class, 'addUserTaxInformation'])->name('settings.taxes.save');
 
         // Profile save
-        Route::get('/settings/{type?}', ['uses' => 'SettingsController@index', 'as'   => 'settings']);
-        Route::post('/settings/account/save', ['uses' => 'SettingsController@saveAccount', 'as'   => 'settings.account.save']);
+        Route::get('/settings/{type?}', [SettingsController::class, 'index'])->name('settings');
+        Route::post('/settings/account/save', [SettingsController::class, 'saveAccount'])->name('settings.account.save');
 
         /*
          * (My) Notifications
          */
-        Route::get('/notifications/{type?}', ['uses' => 'NotificationsController@index', 'as'   => 'notifications']);
+        Route::get('/notifications/{type?}', [NotificationsController::class, 'index'])->name('notifications');
 
         /*
          * (My) Messenger
          */
         Route::group(['prefix' => 'messenger', 'as' => 'messenger.'], function () {
-            Route::get('/', ['uses' => 'MessengerController@index', 'as' => 'get']);
-            Route::get('/fetchContacts', ['uses' => 'MessengerController@fetchContacts', 'as' => 'fetch']);
-            Route::get('/fetchMessages/{userID}', 'MessengerController@fetchMessages', ['as' => 'fetch.user']);
-            Route::post('/sendMessage', 'MessengerController@sendMessage', ['as' => 'send']);
-            Route::delete('/delete/{commentID}', 'MessengerController@deleteMessage', ['as' => 'delete']);
-            Route::post('/authorizeUser', 'MessengerController@authorizeUser', ['as' => 'authorize']);
-            Route::post('/markSeen', 'MessengerController@markSeen', ['as' => 'mark']);
+            Route::get('/', [MessengerController::class, 'index'])->name('get');
+            Route::get('/fetchContacts', [MessengerController::class, 'fetchContacts'])->name('fetch');
+            Route::get('/fetchMessages/{userID}', [MessengerController::class, 'fetchMessages'])->name('fetch.user');
+            Route::post('/sendMessage', [MessengerController::class, 'sendMessage'])->name('send');
+            Route::delete('/delete/{commentID}', [MessengerController::class, 'deleteMessage'])->name('delete');
+            Route::post('/authorizeUser', [MessengerController::class, 'authorizeUser'])->name('authorize');
+            Route::post('/markSeen', [MessengerController::class, 'markSeen'])->name('mark');
         });
         /*
          * (My) Bookmarks
          */
-        Route::any('/bookmarks/{type?}', ['uses' => 'BookmarksController@index', 'as'   => 'bookmarks']);
-//        Route::get('/bookmarks/{type}',['uses' => 'BookmarksController@filterBookmarks', 'as'   => 'bookmarks.filter']);
+        Route::any('/bookmarks/{type?}', [BookmarksController::class, 'index'])->name('bookmarks');
+//        Route::get('/bookmarks/{type}',[BookmarksController::class, 'filterBookmarks'])->name('bookmarks.filter');
 
         /*
          * (My) Lists
          */
         Route::group(['prefix' => '', 'as' => 'lists.'], function () {
-            Route::get('/lists', ['uses' => 'ListsController@index', 'as'   => 'all']);
-            Route::post('/lists/save', ['uses' => 'ListsController@saveList', 'as'   => 'save']);
-            Route::get('/lists/{list_id}', ['uses' => 'ListsController@showList', 'as'   => 'show']);
-            Route::delete('/lists/delete', ['uses' => 'ListsController@deleteList', 'as'   => 'delete']);
-            Route::post('/lists/members/save', ['uses' => 'ListsController@addListMember', 'as'   => 'members.save']);
-            Route::delete('/lists/members/delete', ['uses' => 'ListsController@deleteListMember', 'as'   => 'members.delete']);
-            Route::post('/lists/members/clear', ['uses' => 'ListsController@clearList', 'as'   => 'members.clear']);
-            Route::post('/lists/manage/follows', ['uses' => 'ListsController@manageUserFollows', 'as'   => 'manage.follows']);
+            Route::get('/lists', [ListsController::class, 'index'])->name('all');
+            Route::post('/lists/save', [ListsController::class, 'saveList'])->name('save');
+            Route::get('/lists/{list_id}', [ListsController::class, 'showList'])->name('show');
+            Route::delete('/lists/delete', [ListsController::class, 'deleteList'])->name('delete');
+            Route::post('/lists/members/save', [ListsController::class, 'addListMember'])->name('members.save');
+            Route::delete('/lists/members/delete', [ListsController::class, 'deleteListMember'])->name('members.delete');
+            Route::post('/lists/members/clear', [ListsController::class, 'clearList'])->name('members.clear');
+            Route::post('/lists/manage/follows', [ListsController::class, 'manageUserFollows'])->name('manage.follows');
         });
 
         // (My) Streams routes
         Route::group(['prefix' => 'streams', 'as' => 'streams.'], function () {
-            Route::get('', ['uses' => 'StreamsController@index', 'as'   => 'get']);
-            Route::post('init', ['uses' => 'StreamsController@initStream', 'as'   => 'init']);
-            Route::post('edit', ['uses' => 'StreamsController@saveStreamDetails', 'as'   => 'edit']);
-            Route::post('stop', ['uses' => 'StreamsController@stopStream', 'as'   => 'stop']);
-            Route::delete('delete', ['uses' => 'StreamsController@deleteStream', 'as'   => 'delete']);
-            Route::post('poster-upload', ['uses' => 'StreamsController@posterUpload', 'as'   => 'poster.upload']);
-            Route::get('broadcast', ['uses' => 'StreamsController@liveKitBroadCast', 'as'  => 'livekit.broadcast']);
-            Route::post('livekit/token', ['uses' => 'StreamsController@generateToken', 'as'  => 'livekit.token']);
+            Route::get('', [StreamsController::class, 'index'])->name('get');
+            Route::post('init', [StreamsController::class, 'initStream'])->name('init');
+            Route::post('edit', [StreamsController::class, 'saveStreamDetails'])->name('edit');
+            Route::post('stop', [StreamsController::class, 'stopStream'])->name('stop');
+            Route::delete('delete', [StreamsController::class, 'deleteStream'])->name('delete');
+            Route::post('poster-upload', [StreamsController::class, 'posterUpload'])->name('poster.upload');
+            Route::get('broadcast', [StreamsController::class, 'liveKitBroadCast'])->name('livekit.broadcast');
+            Route::post('livekit/token', [StreamsController::class, 'generateToken'])->name('livekit.token');
         });
 
         Route::group(['prefix' => '', 'as' => 'polls.'], function () {
-            Route::post('/polls/save', ['uses' => 'ListsController@saveList', 'as'   => 'save']);
+            Route::post('/polls/save', [ListsController::class, 'saveList'])->name('save');
         });
 
     });
 
-    Route::post('authorizeStreamPresence', ['uses' => 'StreamsController@authorizeUser', 'as'  => 'public.stream.authorizeUser']);
-    Route::post('stream/comments/add', ['uses' => 'StreamsController@addComment', 'as'  => 'public.stream.comment.add']);
-    Route::delete('stream/comments/delete', ['uses' => 'StreamsController@deleteComment', 'as'  => 'public.stream.comment.delete']);
-    Route::get('stream/archive/{streamID}/{slug}', ['uses' => 'StreamsController@getVod', 'as'  => 'public.vod.get']);
-    Route::get('stream/{streamID}/{slug}', ['uses' => 'StreamsController@getStream', 'as'  => 'public.stream.get']);
+    Route::post('authorizeStreamPresence', [StreamsController::class, 'authorizeUser'])->name('public.stream.authorizeUser');
+    Route::post('stream/comments/add', [StreamsController::class, 'addComment'])->name('public.stream.comment.add');
+    Route::delete('stream/comments/delete', [StreamsController::class, 'deleteComment'])->name('public.stream.comment.delete');
+    Route::get('stream/archive/{streamID}/{slug}', [StreamsController::class, 'getVod'])->name('public.vod.get');
+    Route::get('stream/{streamID}/{slug}', [StreamsController::class, 'getStream'])->name('public.stream.get');
 
-    Route::post('/report/content', ['uses' => 'ListsController@postReport', 'as'   => 'report.content']);
+    Route::post('/report/content', [ListsController::class, 'postReport'])->name('report.content');
 
     Route::group(['prefix' => 'payment', 'as' => 'payment.'], function () {
-        Route::post('/initiate', ['uses' => 'PaymentsController@initiatePayment', 'as'   => 'initiatePayment']);
-        Route::post('/initiate/validate', ['uses' => 'PaymentsController@paymentInitiateValidator', 'as'   => 'initiatePaymentValidator']);
-        Route::get('/paypal/status', ['uses' => 'PaymentsController@executePaypalPayment', 'as'   => 'executePaypalPayment']);
-        Route::get('/stripe/status', ['uses' => 'PaymentsController@getStripePaymentStatus', 'as'   => 'checkStripePaymentStatus']);
-        Route::get('/coinbase/status', ['uses' => 'PaymentsController@checkAndUpdateCoinbaseTransaction', 'as'   => 'checkCoinBasePaymentStatus']);
-        Route::get('/nowpayments/status', ['uses' => 'PaymentsController@checkAndUpdateNowPaymentsTransaction', 'as'   => 'checkNowPaymentStatus']);
-        Route::get('/ccbill/status', ['uses' => 'PaymentsController@processCCBillTransaction', 'as'   => 'checkCCBillPaymentStatus']);
-        Route::get('/paystack/status', ['uses' => 'PaymentsController@verifyPaystackTransaction', 'as'   => 'checkPaystackPaymentStatus']);
-        Route::get('/mercado/status', ['uses' => 'PaymentsController@verifyMercadoTransaction', 'as'   => 'checkMercadoPaymentStatus']);
-        Route::get('/verotel/status', ['uses' => 'PaymentsController@verifyVerotelTransaction', 'as'   => 'checkVerotelPaymentStatus']);
-        Route::get('/razorpay/status', ['uses' => 'PaymentsController@verifyRazorPayTransaction', 'as'   => 'checkRazorPayPaymentStatus']);
+        Route::post('/initiate', [PaymentsController::class, 'initiatePayment'])->name('initiatePayment');
+        Route::post('/initiate/validate', [PaymentsController::class, 'paymentInitiateValidator'])->name('initiatePaymentValidator');
+        Route::get('/paypal/status', [PaymentsController::class, 'executePaypalPayment'])->name('executePaypalPayment');
+        Route::get('/stripe/status', [PaymentsController::class, 'getStripePaymentStatus'])->name('checkStripePaymentStatus');
+        Route::get('/coinbase/status', [PaymentsController::class, 'checkAndUpdateCoinbaseTransaction'])->name('checkCoinBasePaymentStatus');
+        Route::get('/nowpayments/status', [PaymentsController::class, 'checkAndUpdateNowPaymentsTransaction'])->name('checkNowPaymentStatus');
+        Route::get('/ccbill/status', [PaymentsController::class, 'processCCBillTransaction'])->name('checkCCBillPaymentStatus');
+        Route::get('/paystack/status', [PaymentsController::class, 'verifyPaystackTransaction'])->name('checkPaystackPaymentStatus');
+        Route::get('/mercado/status', [PaymentsController::class, 'verifyMercadoTransaction'])->name('checkMercadoPaymentStatus');
+        Route::get('/verotel/status', [PaymentsController::class, 'verifyVerotelTransaction'])->name('checkVerotelPaymentStatus');
+        Route::get('/razorpay/status', [PaymentsController::class, 'verifyRazorPayTransaction'])->name('checkRazorPayPaymentStatus');
     });
 
     // Feed routes
-    Route::get('/feed', ['uses' => 'FeedController@index', 'as'   => 'feed']);
-    Route::get('/feed/posts', ['uses' => 'FeedController@getFeedPosts', 'as'   => 'feed.posts']);
+    Route::get('/feed', [FeedController::class, 'index'])->name('feed');
+    Route::get('/feed/posts', [FeedController::class, 'getFeedPosts'])->name('feed.posts');
 
     // File uploader routes
     Route::group(['prefix' => 'attachment', 'as' => 'attachment.'], function () {
-        Route::post('/upload/{type}', ['uses' => 'AttachmentController@upload', 'as'   => 'upload']);
-        Route::post('/uploadChunked/{type}', ['uses' => 'AttachmentController@uploadChunk', 'as'   => 'upload.chunked']);
-        Route::post('/remove', ['uses' => 'AttachmentController@removeAttachment', 'as'   => 'remove']);
+        Route::post('/upload/{type}', [AttachmentController::class, 'upload'])->name('upload');
+        Route::post('/uploadChunked/{type}', [AttachmentController::class, 'uploadChunk'])->name('upload.chunked');
+        Route::post('/remove', [AttachmentController::class, 'removeAttachment'])->name('remove');
     });
 
     // Posts routes
     Route::group(['prefix' => 'posts', 'as' => 'posts.'], function () {
-        Route::post('/save', ['uses' => 'PostsController@savePost', 'as'   => 'save']);
-        Route::get('/create', ['uses' => 'PostsController@create', 'as'   => 'create']);
-        Route::get('/edit/{post_id}', ['uses' => 'PostsController@edit', 'as'   => 'edit']);
-        Route::get('/{post_id}/{username}', ['uses' => 'PostsController@getPost', 'as'   => 'get']);
-        Route::get('/comments', ['uses' => 'PostsController@getPostComments', 'as'   => 'get.comments']);
-        Route::post('/comments/add', ['uses' => 'PostsController@addNewComment', 'as'   => 'add.comments']);
-        Route::post('/comments/edit', ['uses' => 'PostsController@editComment', 'as'   => 'edit.comments']);
-        Route::delete('/comments/delete', ['uses' => 'PostsController@deleteComment', 'as'   => 'delete.comments']);
+        Route::post('/save', [PostsController::class, 'savePost'])->name('save');
+        Route::get('/create', [PostsController::class, 'create'])->name('create');
+        Route::get('/edit/{post_id}', [PostsController::class, 'edit'])->name('edit');
+        Route::get('/{post_id}/{username}', [PostsController::class, 'getPost'])->name('get');
+        Route::get('/comments', [PostsController::class, 'getPostComments'])->name('get.comments');
+        Route::post('/comments/add', [PostsController::class, 'addNewComment'])->name('add.comments');
+        Route::post('/comments/edit', [PostsController::class, 'editComment'])->name('edit.comments');
+        Route::delete('/comments/delete', [PostsController::class, 'deleteComment'])->name('delete.comments');
 
-        Route::post('/reaction', ['uses' => 'PostsController@updateReaction', 'as'   => 'react']);
-        Route::post('/bookmark', ['uses' => 'PostsController@updatePostBookmark', 'as'   => 'bookmark']);
-        Route::post('/pin', ['uses' => 'PostsController@updatePostPin', 'as'   => 'pin']);
-        Route::delete('/delete', ['uses' => 'PostsController@deletePost', 'as'   => 'delete']);
+        Route::post('/reaction', [PostsController::class, 'updateReaction'])->name('react');
+        Route::post('/bookmark', [PostsController::class, 'updatePostBookmark'])->name('bookmark');
+        Route::post('/pin', [PostsController::class, 'updatePostPin'])->name('pin');
+        Route::delete('/delete', [PostsController::class, 'deletePost'])->name('delete');
 
-        Route::post('/polls/vote', ['uses' => 'PostsController@userPollVote', 'as'   => 'polls.vote']);
+        Route::post('/polls/vote', [PostsController::class, 'userPollVote'])->name('polls.vote');
     });
 
     // Subscriptions routes
     Route::group(['prefix' => 'subscriptions', 'as' => 'subscriptions.'], function () {
-        Route::get('/{subscriptionId}/cancel/{redirectTo}', ['uses' => 'SubscriptionsController@cancelSubscription', 'as'   => 'cancel']);
+        Route::get('/{subscriptionId}/cancel/{redirectTo}', [SubscriptionsController::class, 'cancelSubscription'])->name('cancel');
     });
 
     // Withdrawals routes
     Route::group(['prefix' => 'withdrawals', 'as' => 'withdrawals.'], function () {
-        Route::post('/request', ['uses' => 'WithdrawalsController@requestWithdrawal', 'as'   => 'request']);
-        Route::get('/onboarding', ['uses' => 'WithdrawalsController@onboarding', 'as'   => 'onboarding']);
+        Route::post('/request', [WithdrawalsController::class, 'requestWithdrawal'])->name('request');
+        Route::get('/onboarding', [WithdrawalsController::class, 'onboarding'])->name('onboarding');
     });
 
     // Invoices routes
     Route::group(['prefix' => 'invoices', 'as' => 'invoices.'], function () {
-        Route::get('/{id}', ['uses' => 'InvoicesController@index', 'as'   => 'get']);
+        Route::get('/{id}', [InvoicesController::class, 'index'])->name('get');
     });
 
     // Countries routes
     Route::group(['prefix' => 'countries', 'as' => 'countries.'], function () {
-        Route::get('', ['uses' => 'GenericController@countries', 'as'   => 'get']);
+        Route::get('', [GenericController::class, 'countries'])->name('get');
     });
 
     // Ai routes
     Route::group(['prefix' => 'suggestions', 'as' => 'suggestions.'], function () {
-        Route::post('/generate', ['uses' => 'AiController@generateSuggestion', 'as'   => 'generate']);
+        Route::post('/generate', [AiController::class, 'generateSuggestion'])->name('generate');
     });
 
-    Route::post('/auth/presence-channel', ['uses' => 'GenericController@authorizePresenceChannel', 'as' => 'presence.auth']);
+    Route::post('/auth/presence-channel', [GenericController::class, 'authorizePresenceChannel'])->name('presence.auth');
 
     // Private stories routes
     Route::group(['prefix' => 'stories', 'as' => 'stories.'], function () {
-        Route::get('/create', ['uses' => 'StoriesController@create', 'as' => 'create']);
-        Route::post('/create', ['uses' => 'StoriesController@store', 'as' => 'store']);
-        Route::get('/feed', ['uses' => 'StoriesController@feed', 'as' => 'feed']);
-        Route::get('/payload/{id}', ['uses' => 'StoriesController@payload', 'as' => 'payload']);
+        Route::get('/create', [StoriesController::class, 'create'])->name('create');
+        Route::post('/create', [StoriesController::class, 'store'])->name('store');
+        Route::get('/feed', [StoriesController::class, 'feed'])->name('feed');
+        Route::get('/payload/{id}', [StoriesController::class, 'payload'])->name('payload');
 
-        Route::post('/upload', ['uses' => 'StoriesController@upload', 'as' => 'upload']);
-        Route::post('/view', ['uses' => 'StoriesController@view', 'as' => 'view']);
+        Route::post('/upload', [StoriesController::class, 'upload'])->name('upload');
+        Route::post('/view', [StoriesController::class, 'view'])->name('view');
 
-        Route::delete('/delete', ['uses' => 'StoriesController@delete', 'as' => 'delete']);
-        Route::post('/pin-toggle', ['uses' => 'StoriesController@pinToggle', 'as' => 'pinToggle']);
+        Route::delete('/delete', [StoriesController::class, 'delete'])->name('delete');
+        Route::post('/pin-toggle', [StoriesController::class, 'pinToggle'])->name('pinToggle');
     });
 
     Route::group(['prefix' => 'sounds', 'as' => 'sounds.'], function () {
-        Route::get('/trending', ['uses' => 'SoundsController@trending', 'as' => 'trending']);
-        Route::get('/search', ['uses' => 'SoundsController@search', 'as' => 'search']);
+        Route::get('/trending', [SoundsController::class, 'trending'])->name('trending');
+        Route::get('/search', [SoundsController::class, 'search'])->name('search');
     });
 
 });
 
 // Public story routes
 Route::group(['prefix' => 'stories', 'as' => 'stories.'], function () {
-    Route::get('/s/{story}', ['uses' => 'StoriesController@share', 'as' => 'share']);
-    Route::get('/profile/{username}', ['uses' => 'StoriesController@profile', 'as' => 'profile']);
-    Route::get('/highlights/{username}', ['uses' => 'StoriesController@highlights', 'as' => 'highlights']);
+    Route::get('/s/{story}', [StoriesController::class, 'share'])->name('share');
+    Route::get('/profile/{username}', [StoriesController::class, 'profile'])->name('profile');
+    Route::get('/highlights/{username}', [StoriesController::class, 'highlights'])->name('highlights');
 });
 
 // Subscriptions routes
 Route::group(['prefix' => 'subscriptions', 'as' => 'subscriptions.'], function () {
-    Route::get('/{subscriptionId}/cancel/{redirectTo}', ['uses' => 'SubscriptionsController@cancelSubscription', 'as'   => 'cancel']);
+    Route::get('/{subscriptionId}/cancel/{redirectTo}', [SubscriptionsController::class, 'cancelSubscription'])->name('cancel');
 });
 
 // 2FA related routes
 Route::group(['middleware' => ['auth', 'verified']], function () {
-    Route::get('device-verify', ['uses' => 'TwoFAController@index', 'as' => '2fa.index']);
-    Route::post('device-verify', ['uses' => 'TwoFAController@store', 'as' => '2fa.post']);
-    Route::get('device-verify/reset', ['uses' => 'TwoFAController@resend', 'as' => '2fa.resend']);
-    Route::delete('device-verify/delete', ['uses' => 'TwoFAController@deleteDevice', 'as' => '2fa.delete']);
+    Route::get('device-verify', [TwoFAController::class, 'index'])->name('2fa.index');
+    Route::post('device-verify', [TwoFAController::class, 'store'])->name('2fa.post');
+    Route::get('device-verify/reset', [TwoFAController::class, 'resend'])->name('2fa.resend');
+    Route::delete('device-verify/delete', [TwoFAController::class, 'deleteDevice'])->name('2fa.delete');
 });
 
-Route::any('beacon/{type}', [
-    'as'   => 'beacon.send',
-    'uses' => 'StatsController@sendBeacon',
-]);
+Route::any('beacon/{type}', [StatsController::class, 'sendBeacon'])->name('beacon.send');
 
-Route::post('payment/stripeStatusUpdate', [
-    'as'   => 'stripe.payment.update',
-    'uses' => 'PaymentsController@stripePaymentsHook',
-]);
+Route::post('payment/stripeStatusUpdate', [PaymentsController::class, 'stripePaymentsHook'])->name('stripe.payment.update');
 
-Route::post('payment/stripeConnectStatusUpdate', [
-    'as'   => 'stripeConnect.payment.update',
-    'uses' => 'PaymentsController@stripeConnectHook',
-]);
+Route::post('payment/stripeConnectStatusUpdate', [PaymentsController::class, 'stripeConnectHook'])->name('stripeConnect.payment.update');
 
-Route::post('payment/paypalStatusUpdate', [
-    'as'   => 'paypal.payment.update',
-    'uses' => 'PaymentsController@paypalPaymentsHook',
-]);
+Route::post('payment/paypalStatusUpdate', [PaymentsController::class, 'paypalPaymentsHook'])->name('paypal.payment.update');
 
-Route::post('payment/coinbaseStatusUpdate', [
-    'as'   => 'coinbase.payment.update',
-    'uses' => 'PaymentsController@coinbaseHook',
-]);
+Route::post('payment/coinbaseStatusUpdate', [PaymentsController::class, 'coinbaseHook'])->name('coinbase.payment.update');
 
-Route::post('payment/nowPaymentsStatusUpdate', [
-    'as'   => 'nowPayments.payment.update',
-    'uses' => 'PaymentsController@nowPaymentsHook',
-]);
+Route::post('payment/nowPaymentsStatusUpdate', [PaymentsController::class, 'nowPaymentsHook'])->name('nowPayments.payment.update');
 
-Route::post('payment/ccBillPaymentStatusUpdate', [
-    'as'   => 'ccBill.payment.update',
-    'uses' => 'PaymentsController@ccBillHook',
-]);
+Route::post('payment/ccBillPaymentStatusUpdate', [PaymentsController::class, 'ccBillHook'])->name('ccBill.payment.update');
 
-Route::post('payment/paystackPaymentStatusUpdate', [
-    'as'   => 'paystack.payment.update',
-    'uses' => 'PaymentsController@paystackHook',
-]);
+Route::post('payment/paystackPaymentStatusUpdate', [PaymentsController::class, 'paystackHook'])->name('paystack.payment.update');
 
-Route::post('payment/mercadoPaymentStatusUpdate', [
-    'as'   => 'mercado.payment.update',
-    'uses' => 'PaymentsController@mercadoHook',
-]);
+Route::post('payment/mercadoPaymentStatusUpdate', [PaymentsController::class, 'mercadoHook'])->name('mercado.payment.update');
 
-Route::get('payment/verotelPaymentStatusUpdate', [
-    'as'   => 'verotel.payment.update',
-    'uses' => 'PaymentsController@verotelHook',
-]);
+Route::get('payment/verotelPaymentStatusUpdate', [PaymentsController::class, 'verotelHook'])->name('verotel.payment.update');
 
-Route::post('payment/razorPayPaymentStatusUpdate', [
-    'as'   => 'razorpay.payment.update',
-    'uses' => 'PaymentsController@razorPayHook',
-]);
+Route::post('payment/razorPayPaymentStatusUpdate', [PaymentsController::class, 'razorPayHook'])->name('razorpay.payment.update');
 
-Route::post('transcoding/coconut/update', [
-    'as'   => 'transcoding.coconut.update',
-    'uses' => 'AttachmentController@handleCoconutHook',
-]);
+Route::post('transcoding/coconut/update', [AttachmentController::class, 'handleCoconutHook'])->name('transcoding.coconut.update');
 
 // Install & upgrade routes
-Route::get('/install', ['uses' => 'InstallerController@install', 'as'   => 'installer.install']);
-Route::post('/install/savedbinfo', ['uses' => 'InstallerController@testAndSaveDBInfo', 'as'   => 'installer.savedb']);
-Route::post('/install/beginInstall', ['uses' => 'InstallerController@beginInstall', 'as'   => 'installer.beginInstall']);
-Route::get('/install/finishInstall', ['uses' => 'InstallerController@finishInstall', 'as'   => 'installer.finishInstall']);
-Route::get('/update', ['uses' => 'InstallerController@upgrade', 'as'   => 'installer.update']);
-Route::post('/update/doUpdate', ['uses' => 'InstallerController@doUpgrade', 'as'   => 'installer.doUpdate']);
+Route::get('/install', [InstallerController::class, 'install'])->name('installer.install');
+Route::post('/install/savedbinfo', [InstallerController::class, 'testAndSaveDBInfo'])->name('installer.savedb');
+Route::post('/install/beginInstall', [InstallerController::class, 'beginInstall'])->name('installer.beginInstall');
+Route::get('/install/finishInstall', [InstallerController::class, 'finishInstall'])->name('installer.finishInstall');
+Route::get('/update', [InstallerController::class, 'upgrade'])->name('installer.update');
+Route::post('/update/doUpdate', [InstallerController::class, 'doUpgrade'])->name('installer.doUpdate');
 
 // (Feed/Search) Suggestions filter
-Route::post('/suggestions/members', ['uses' => 'FeedController@filterSuggestedMembers', 'as'   => 'suggestions.filter']);
+Route::post('/suggestions/members', [FeedController::class, 'filterSuggestedMembers'])->name('suggestions.filter');
+
+// Public random feed routes
+Route::get('/all-feed', [FeedController::class, 'publicIndex'])->name('feed.public');
+Route::get('/all-feed/posts', [FeedController::class, 'getPublicFeedPosts'])->name('feed.public.posts');
 
 // Public pages
-Route::get('/pages/{slug}', ['uses' => 'PublicPagesController@getPage', 'as'   => 'pages.get']);
+Route::get('/pages/{slug}', [PublicPagesController::class, 'getPage'])->name('pages.get');
 
-Route::get('/search', ['uses' => 'SearchController@index', 'as' => 'search.get']);
-Route::get('/search/posts', ['uses' => 'SearchController@getSearchPosts', 'as' => 'search.posts']);
-Route::get('/search/users', ['uses' => 'SearchController@getUsersSearch', 'as' => 'search.users']);
-Route::get('/search/streams', ['uses' => 'SearchController@getStreamsSearch', 'as' => 'search.streams']);
+Route::get('/search', [SearchController::class, 'index'])->name('search.get');
+Route::get('/search/posts', [SearchController::class, 'getSearchPosts'])->name('search.posts');
+Route::get('/search/users', [SearchController::class, 'getUsersSearch'])->name('search.users');
+Route::get('/search/streams', [SearchController::class, 'getStreamsSearch'])->name('search.streams');
 
-Route::post('/markBannerAsSeen', ['uses' => 'GenericController@markBannerAsSeen', 'as'   => 'banner.mark.seen']);
+Route::post('/markBannerAsSeen', [GenericController::class, 'markBannerAsSeen'])->name('banner.mark.seen');
 
 // Public profile
-Route::get('/{username}', ['uses' => 'ProfileController@index', 'as'   => 'profile']);
-Route::get('/{username}/posts', ['uses' => 'ProfileController@getUserPosts', 'as'   => 'profile.posts']);
-Route::get('/{username}/streams', ['uses' => 'ProfileController@getUserStreams', 'as'   => 'profile.streams']);
+Route::get('/{username}', [ProfileController::class, 'index'])->where('username', '^(?!all-feed$).+')->name('profile');
+Route::get('/{username}/posts', [ProfileController::class, 'getUserPosts'])->where('username', '^(?!all-feed$).+')->name('profile.posts');
+Route::get('/{username}/streams', [ProfileController::class, 'getUserStreams'])->where('username', '^(?!all-feed$).+')->name('profile.streams');
 
 Route::fallback(function () {
     abort(404);

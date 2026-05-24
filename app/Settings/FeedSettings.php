@@ -26,6 +26,8 @@ class FeedSettings extends Settings
 
     public bool $suggestions_skip_empty_profiles;
 
+    public bool $suggestions_skip_no_content;
+
     public bool $suggestions_skip_unverified_profiles;
 
     public bool $suggestions_use_featured_users_list;

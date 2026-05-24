@@ -57,6 +57,7 @@ class SuggestionsServiceProvider extends ServiceProvider
     {
         return [
             'skip_empty_profiles'   => (bool) getSetting('feed.suggestions_skip_empty_profiles'),
+            'skip_no_content'       => (bool) getSetting('feed.suggestions_skip_no_content'),
             'skip_unverified'       => (bool) getSetting('feed.suggestions_skip_unverified_profiles'),
             'use_featured_list'     => (bool) getSetting('feed.suggestions_use_featured_users_list'),
             'total_cards'           => (int) getSetting('feed.feed_suggestions_total_cards'),
@@ -73,10 +74,16 @@ class SuggestionsServiceProvider extends ServiceProvider
     {
         $userIds = FeaturedUser::pluck('user_id')->toArray();
 
-        return User::query()
+        $members = User::query()
             ->where('public_profile', 1)
             ->whereIn('id', $userIds)
             ->limit($settings['total_cards'] * $settings['cards_per_page']);
+
+        if ($settings['skip_no_content']) {
+            $members->whereHas('posts');
+        }
+
+        return $members;
     }
 
     /**
@@ -111,6 +118,10 @@ class SuggestionsServiceProvider extends ServiceProvider
                 ->whereNotNull('cover');
         }
 
+        if ($settings['skip_no_content']) {
+            $members->whereHas('posts');
+        }
+
         if ($settings['skip_unverified']) {
             $members->join('user_verifies', function ($join) {
                 $join->on('users.id', '=', 'user_verifies.user_id');
@@ -129,6 +140,7 @@ class SuggestionsServiceProvider extends ServiceProvider
     private static function topSubbedUserIds(array $settings): array
     {
         $skipEmpty = $settings['skip_empty_profiles'];
+        $skipNoContent = $settings['skip_no_content'];
         $skipUnverified = $settings['skip_unverified'];
         $mostSubbedMax = $settings['total_cards'];
 
@@ -141,6 +153,9 @@ class SuggestionsServiceProvider extends ServiceProvider
                 ? "INNER JOIN user_verifies verifications
                         ON usersTable.id = verifications.user_id
                        AND verifications.status = 'verified'"
+                : "")."
+            ".($skipNoContent
+                ? "INNER JOIN posts postsTable ON usersTable.id = postsTable.user_id"
                 : "")."
             WHERE usersTable.role_id = 2
             ".($skipEmpty

@@ -10,13 +10,13 @@
                 <input type="hidden" name="user_message_id" id="userMessage" value="">
                 <input type="hidden" name="recipient_user_id" id="recipient" value="">
                 <input type="hidden" name="provider" id="provider" value="">
-                <input type="hidden" name="first_name" id="paymentFirstName" value="">
-                <input type="hidden" name="last_name" id="paymentLastName" value="">
-                <input type="hidden" name="billing_address" id="paymentBillingAddress" value="">
-                <input type="hidden" name="city" id="paymentCity" value="">
-                <input type="hidden" name="state" id="paymentState" value="">
-                <input type="hidden" name="postcode" id="paymentPostcode" value="">
-                <input type="hidden" name="country" id="paymentCountry" value="">
+                <input type="hidden" name="first_name" id="paymentFirstName" value="{{ optional(Auth::user())->first_name }}">
+                <input type="hidden" name="last_name" id="paymentLastName" value="{{ optional(Auth::user())->last_name }}">
+                <input type="hidden" name="billing_address" id="paymentBillingAddress" value="{{ optional(Auth::user())->billing_address }}">
+                <input type="hidden" name="city" id="paymentCity" value="{{ optional(Auth::user())->city }}">
+                <input type="hidden" name="state" id="paymentState" value="{{ optional(Auth::user())->state }}">
+                <input type="hidden" name="postcode" id="paymentPostcode" value="{{ optional(Auth::user())->postcode }}">
+                <input type="hidden" name="country" id="paymentCountry" value="{{ optional(Auth::user())->country }}">
                 <input type="hidden" name="taxes" id="paymentTaxes" value="">
                 <input type="hidden" name="stream" id="stream" value="">
                 <button class="payment-button" type="submit"></button>
@@ -64,85 +64,8 @@
                             </div>
                         </div>
 
-                        <div id="accordion" class="mb-3">
-                            <div class="card">
-                                <div class="card-header d-flex justify-content-between" id="headingOne" data-toggle="collapse" data-target="#billingInformation" aria-expanded="true" aria-controls="billingInformation">
-                                    <h6 class="mb-0">
-                                        {{__('Billing agreement details')}}
-                                    </h6>
-                                    <div class="ml-1 label-icon">
-                                        @include('elements.icon',['icon'=>'chevron-down-outline','centered'=>false])
-                                    </div>
-                                </div>
-                                <div id="billingInformation" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
-                                    <div class="card-body">
-                                        <form id="billing-agreement-form">
-                                            <div class="tab-content">
-                                                <!-- credit card info-->
-                                                <div id="individual" class="tab-pane fade show active pt-1">
-                                                    <div class="row form-group">
-                                                        <div class="col-sm-6 col-6">
-                                                            <div class="form-group">
-                                                                <label for="firstName">
-                                                                    <span>{{__('First name')}}</span>
-                                                                </label>
-                                                                <input type="text" name="firstName" placeholder="{{__('First name')}}" onchange="checkout.validateFirstNameField();" required class="form-control uifield-first_name">
-                                                            </div>
-
-                                                        </div>
-                                                        <div class="col-sm-6 col-6">
-                                                            <div class="form-group">
-                                                                <label for="lastName">
-                                                                    <span>{{__('Last name')}}</span>
-                                                                </label>
-                                                                <input type="text" name="lastName" placeholder="{{__('Last name')}}" onblur="checkout.validateLastNameField()" required class="form-control uifield-last_name">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="countrySelect">
-                                                            <span>{{__('Country')}}</span>
-                                                        </label>
-                                                        <select class="country-select form-control input-sm uifield-country" id="countrySelect" required onchange="checkout.validateCountryField()"></select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="billingCity">
-                                                            <span>{{__('City')}}</span>
-                                                        </label>
-                                                        <input type="text" name="billingCity" placeholder="{{__('City')}}" onblur="checkout.validateCityField()" required class="form-control uifield-city">
-                                                    </div>
-                                                    <div class="row">
-                                                        <div class="col-sm-6 col-6">
-                                                            <div class="form-group">
-                                                                <label for="billingState">
-                                                                    <span>{{__('State')}}</span>
-                                                                </label>
-                                                                <input type="text" name="billingState" placeholder="{{__('State')}}" onblur="checkout.validateStateField()" required class="form-control uifield-state">
-                                                            </div>
-
-                                                        </div>
-                                                        <div class="col-sm-6 col-6">
-                                                            <div class="form-group">
-                                                                <label for="billingPostcode">
-                                                                    <span>{{__('Postcode')}}</span>
-                                                                </label>
-                                                                <input type="text" name="billingPostcode" placeholder="{{__('Postcode')}}" onblur="checkout.validatePostcodeField()" required class="form-control uifield-postcode">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="cardNumber">
-                                                            <span>{{__('Address')}}</span>
-                                                        </label>
-                                                        <textarea rows="2" type="text" name="billingAddress" onblur="checkout.validateBillingAddressField()" placeholder="{{__('Street address, apartment, suite, unit')}}" class="form-control w-100 uifield-billing_address" required></textarea>
-                                                    </div>
-                                                </div>
-                                                <div class="billing-agreement-error error text-danger d-none">{{__('Please complete all billing details')}}</div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="d-none">
+                            <select class="country-select form-control input-sm uifield-country" id="countrySelect"></select>
                         </div>
 
                         <div class="mb-3">
@@ -246,7 +169,7 @@
                                 <div class="credit-payment-method p-1 col-6 col-md-3 col-lg-3"{!! (!Auth::check() || (Auth::user()->wallet->total ?? 0) <= 0) ? 'data-toggle="tooltip" data-placement="right"': '' !!} title="{{ __('You can use the wallet deposit page to add credit.') }}">
                                     <div class="radio mx-auto credit-payment-provider checkout-payment-provider d-flex align-items-center justify-content-center my-0" data-value="credit">
                                         <div class="credit-provider-text">
-                                            <b>{{__("Credit")}}</b>
+                                            <b>{{__("Wallet")}}</b>
                                             <div class="available-credit">({{\App\Providers\SettingsServiceProvider::getWebsiteFormattedAmount('0')}})</div>
                                         </div>
                                     </div>

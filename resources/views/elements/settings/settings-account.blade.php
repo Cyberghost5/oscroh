@@ -1,5 +1,26 @@
 @if(!Auth::user()->email_verified_at) @include('elements.resend-verification-email-box') @endif
 
+@if(getSetting('ai.ai_auto_reply_enabled') && Auth::user()->ai_auto_reply_enabled)
+<div class="card py-3 px-3 mb-3">
+    <div class="custom-control custom-switch">
+        <input
+            type="checkbox"
+            class="custom-control-input"
+            id="ai_auto_reply_toggle"
+            {{ (!isset(Auth::user()->settings['ai_auto_reply_paused']) || Auth::user()->settings['ai_auto_reply_paused'] !== 'true') ? 'checked' : '' }}
+        >
+        <label class="custom-control-label" for="ai_auto_reply_toggle">
+            {{ __('Enable AI Auto Reply') }}
+        </label>
+    </div>
+    <div class="mt-2">
+        <small class="text-muted">
+            {{ __('When enabled, an AI assistant will automatically respond to messages you receive from fans on your behalf.') }}
+        </small>
+    </div>
+</div>
+@endif
+
 <form method="POST" action="{{route('my.settings.account.save')}}">
     @csrf
     @if(session('success'))

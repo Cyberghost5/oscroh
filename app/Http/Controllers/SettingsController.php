@@ -572,6 +572,7 @@ class SettingsController extends Controller
                     'geoblocked_countries',
                     'notification_email_new_ppv_unlock',
                     'notification_email_creator_went_live',
+                    'ai_auto_reply_paused',
                 ])],
                 'value' => ['nullable'], // adjust rules depending on expected type
             ]);

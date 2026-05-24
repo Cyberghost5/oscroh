@@ -302,8 +302,10 @@ class SettingsServiceProvider extends ServiceProvider
 
         // Storage
         $awsRegion = getSetting('storage.aws_region') != null ? getSetting('storage.aws_region') : 'us-east-1';
-        config(['filesystems.disks.s3.key' => getSetting('storage.aws_access_key')]);
-        config(['filesystems.disks.s3.secret' => getSetting('storage.aws_secret_key')]);
+        $awsAccessKey = getSetting('storage.aws_access_key');
+        $awsSecretKey = getSetting('storage.aws_secret_key');
+        config(['filesystems.disks.s3.key' => $awsAccessKey]);
+        config(['filesystems.disks.s3.secret' => $awsSecretKey]);
         config(['filesystems.disks.s3.region' => $awsRegion]);
         config(['filesystems.disks.s3.bucket' => getSetting('storage.aws_bucket_name')]);
 
@@ -339,13 +341,12 @@ class SettingsServiceProvider extends ServiceProvider
         config(['filesystems.disks.r2.endpoint' => rtrim(getSetting('storage.r2_endpoint'), '/')]);
         config(['filesystems.disks.r2.url' => rtrim(getSetting('storage.r2_custom_url'), '/')]);
 
-        // TODO: Not sure if these still required in latest version
-        config(['services.ses.key' => getSetting('storage.aws_access_key')]);
-        config(['services.ses.secret' => getSetting('storage.aws_secret_key')]);
-        config(['services.ses.s3.region' => $awsRegion]);
+        config(['services.ses.key' => $awsAccessKey]);
+        config(['services.ses.secret' => $awsSecretKey]);
+        config(['services.ses.region' => $awsRegion]);
 
-        config(['queue.connections.sqs.key' => getSetting('storage.aws_access_key')]);
-        config(['queue.connections.sqs.secret' => getSetting('storage.aws_secret_key')]);
+        config(['queue.connections.sqs.key' => $awsAccessKey]);
+        config(['queue.connections.sqs.secret' => $awsSecretKey]);
         config(['queue.connections.sqs.region' => $awsRegion]);
 
     }

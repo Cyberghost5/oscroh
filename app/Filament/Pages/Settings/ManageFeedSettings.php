@@ -117,6 +117,10 @@ class ManageFeedSettings extends SettingsPage
                                                         ->label("Skip empty profiles")
                                                         ->helperText('Only shows profiles with both avatar and cover images.'),
 
+                                                    Toggle::make('suggestions_skip_no_content')
+                                                        ->label("Skip profiles with no content")
+                                                        ->helperText('Only shows profiles that have published at least one post.'),
+
                                                     Toggle::make('suggestions_skip_unverified_profiles')
                                                         ->label("Skip non-verified profiles")
                                                         ->helperText('Show only ID verified profiles in suggestions.'),

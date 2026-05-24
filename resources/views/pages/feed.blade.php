@@ -53,7 +53,7 @@
 
                 <div class="m-pt-70"></div>
 
-                @if(getSetting('stories.stories_enabled'))
+                @if(getSetting('stories.stories_enabled') && Auth::check())
                     <!-- Stories row -->
                     <div class="px-3 py-2 neutral-bg">
                         <div id="stories-swiper" class="swiper-container stories-swiper">

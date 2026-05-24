@@ -11,6 +11,7 @@ use App\Model\Country;
 use App\Model\User;
 use App\Model\UserGender;
 use App\Providers\AttachmentServiceProvider;
+use App\Settings\AISettings;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
@@ -31,6 +32,7 @@ use Filament\Tables;
 use Filament\Forms;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Textarea;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\HtmlString;
@@ -287,6 +289,42 @@ class UserResource extends Resource
                             ->label(__('admin.resources.user.fields.state')),
                         Forms\Components\TextInput::make('postcode')
                             ->label(__('admin.resources.user.fields.postcode')),
+                    ]),
+                ])
+                ->columnSpanFull(),
+
+            Section::make('AI Auto Reply')
+                ->description('Configure the AI auto-reply chatbot for this creator. The global switch in AI Settings must also be enabled.')
+                ->icon('heroicon-o-cpu-chip')
+                ->collapsed()
+                ->schema([
+                    Grid::make(2)->schema([
+                        Forms\Components\Toggle::make('ai_auto_reply_enabled')
+                            ->label('Enable AI auto-reply for this creator')
+                            ->helperText('When on, the AI will automatically respond to incoming fan messages on behalf of this creator.')
+                            ->columnSpanFull()
+                            ->disabled(fn () => ! app(AISettings::class)->ai_auto_reply_enabled)
+                            ->hint(fn () => ! app(AISettings::class)->ai_auto_reply_enabled
+                                ? 'Global AI auto-reply is currently OFF. Enable it in AI Settings first.'
+                                : null),
+
+                        Forms\Components\Toggle::make('ai_auto_reply_respond_to_paid')
+                            ->label('Respond to paid messages')
+                            ->helperText('Allow the AI to reply to messages that have a price attached.'),
+
+                        Forms\Components\TextInput::make('ai_auto_reply_delay_seconds')
+                            ->label('Reply delay (seconds)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(3600)
+                            ->default(0)
+                            ->helperText('Seconds to wait before sending the AI reply. Use 0 for instant. A small delay (e.g. 30–120s) feels more human.'),
+
+                        Textarea::make('ai_auto_reply_system_prompt')
+                            ->label('Custom system prompt (optional)')
+                            ->columnSpanFull()
+                            ->rows(6)
+                            ->helperText('Override the global default prompt for this creator specifically. Leave blank to use the global default. Use {creator_name} as a placeholder for their username.'),
                     ]),
                 ])
                 ->columnSpanFull(),

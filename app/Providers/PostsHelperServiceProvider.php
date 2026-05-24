@@ -173,6 +173,72 @@ class PostsHelperServiceProvider extends ServiceProvider
     }
 
     /**
+     * Gets random list of public feed posts (works for guests too).
+     *
+     * @param bool $encodePostsToHtml
+     * @param bool $pageNumber
+     * @return array
+     */
+    public static function getPublicRandomFeedPosts($encodePostsToHtml = false, $pageNumber = false)
+    {
+        $relations = ['user', 'reactions', 'attachments', 'bookmarks', 'postPurchases'];
+
+        $posts = Post::withCount('tips')
+            ->with($relations)
+            ->whereHas('user', function ($query) {
+                $query->where('public_profile', 1);
+                $query->where('role_id', 2);
+            });
+
+        $posts = self::filterPosts($posts, 0, 'scheduled');
+        $posts = self::filterPosts($posts, 0, 'approvedPostsOnly');
+        $posts->inRandomOrder();
+
+        if ($pageNumber) {
+            $posts = $posts->paginate(getSetting('feed.feed_posts_per_page'), ['*'], 'page', $pageNumber)->appends(request()->query());
+        } else {
+            $posts = $posts->paginate(getSetting('feed.feed_posts_per_page'))->appends(request()->query());
+        }
+
+        $activeSubs = [];
+        if (Auth::check() && Auth::user()->role_id !== 1) {
+            $activeSubs = self::getUserActiveSubs(Auth::id());
+        }
+
+        if ($encodePostsToHtml) {
+            $data = [
+                'total' => $posts->total(),
+                'currentPage' => $posts->currentPage(),
+                'last_page' => $posts->lastPage(),
+                'prev_page_url' => $posts->previousPageUrl(),
+                'next_page_url' => $posts->nextPageUrl(),
+                'first_page_url' => $posts->nextPageUrl(),
+                'hasMore' => $posts->hasMorePages(),
+            ];
+
+            $postsData = $posts->map(function ($post) use ($activeSubs, $data) {
+                $post->setAttribute('isSubbed', self::isPublicFeedPostUnlockedByCurrentUser($post, $activeSubs));
+                $post->setAttribute('postPage', $data['currentPage']);
+                $post = ['id' => $post->id, 'html' => View::make('elements.feed.post-box')->with('post', $post)->render()];
+
+                return $post;
+            });
+
+            $data['posts'] = $postsData;
+        } else {
+            $postsCurrentPage = $posts->currentPage();
+            $posts->map(function ($post) use ($activeSubs, $postsCurrentPage) {
+                $post->setAttribute('isSubbed', self::isPublicFeedPostUnlockedByCurrentUser($post, $activeSubs));
+                $post->setAttribute('postPage', $postsCurrentPage);
+                return $post;
+            });
+            $data = $posts;
+        }
+
+        return $data;
+    }
+
+    /**
      * Gets list of posts for profile.
      * @param $userID
      * @param bool $encodePostsToHtml
@@ -879,5 +945,25 @@ class PostsHelperServiceProvider extends ServiceProvider
         $isTextPreviewDisabled = getSetting('feed.disable_posts_text_preview');
         $shouldHideText = $isTextPreviewDisabled && ($isPPVLocked || !$isSubscriptionUnlocked);
         return $shouldHideText;
+    }
+
+    /**
+     * Determines if current user can access creator-subscription locked content.
+     *
+     * @param Post $post
+     * @param array $activeSubs
+     * @return bool
+     */
+    private static function isPublicFeedPostUnlockedByCurrentUser(Post $post, array $activeSubs = []): bool
+    {
+        if (!Auth::check()) {
+            return false;
+        }
+
+        if (Auth::user()->role_id === 1 || Auth::id() === $post->user_id) {
+            return true;
+        }
+
+        return in_array($post->user_id, $activeSubs);
     }
 }

@@ -22,7 +22,7 @@
     </div>
     <ul class="nav flex-column user-side-menu">
         <li class="nav-item ">
-            <a href="{{Auth::check() ? route('feed') : route('home')}}" class="h-pill h-pill-primary nav-link {{Route::currentRouteName() == 'feed' ? 'active' : ''}} d-flex justify-content-between">
+            <a href="{{Auth::check() ? route('feed') : route('feed.public')}}" class="h-pill h-pill-primary nav-link {{in_array(Route::currentRouteName(), ['feed', 'feed.public']) ? 'active' : ''}} d-flex justify-content-between">
                 <div class="d-flex justify-content-center align-items-center">
                     <div class="icon-wrapper d-flex justify-content-center align-items-center">
                         @include('elements.icon',['icon'=>'home-outline','variant'=>'large'])

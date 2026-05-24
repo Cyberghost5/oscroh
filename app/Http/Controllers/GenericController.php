@@ -183,13 +183,31 @@ class GenericController extends Controller
     }
 
     public function clearAppCache(Request $request) {
-        Artisan::call('cache:clear');
-        return response()->json(['success' => true, 'message' => __("Application cache cleared successfully")], 200);
+        try {
+            $exitCode = Artisan::call('cache:clear');
+            
+            if ($exitCode !== 0) {
+                throw new \Exception('Cache clear command failed with exit code: ' . $exitCode);
+            }
+            
+            return response()->json(['success' => true, 'message' => __('Application cache cleared successfully')], 200);
+        } catch (\Throwable $exception) {
+            return response()->json(['success' => false, 'error' => 'Error: "'.$exception->getMessage().'"'], 500);
+        }
     }
 
     public function clearOptimizedCache(Request $request) {
-        Artisan::call('optimize:clear');
-        return response()->json(['success' => true, 'message' => __("Optimized cache cleared successfully")], 200);
+        try {
+            $exitCode = Artisan::call('optimize:clear');
+            
+            if ($exitCode !== 0) {
+                throw new \Exception('Optimize clear command failed with exit code: ' . $exitCode);
+            }
+            
+            return response()->json(['success' => true, 'message' => __('Optimized cache cleared successfully')], 200);
+        } catch (\Throwable $exception) {
+            return response()->json(['success' => false, 'error' => 'Error: "'.$exception->getMessage().'"'], 500);
+        }
     }
 
     public function createStorageSymlink(Request $request) {

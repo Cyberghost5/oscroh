@@ -105,7 +105,8 @@ class StatsOverviewWidget extends BaseWidget
                     'class' => 'has-tooltip',
                 ]),
 
-            Stat::make(__('admin.widgets.stats_overview.new_users.label'), $newUsers)
+            // Stat::make(__('admin.widgets.stats_overview.new_users.label'), $newUsers) // In a month users
+            Stat::make(__('admin.widgets.stats_overview.new_users.label'), User::count()) // In a lifetime
                 ->description(__('admin.widgets.stats_overview.new_users.description'))
                 ->descriptionIcon('heroicon-m-user-plus')
                 ->chart($usersChart)

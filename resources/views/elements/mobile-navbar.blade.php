@@ -1,6 +1,6 @@
 <div class="mobile-bottom-nav border-top z-index-3 py-1 neutral-bg">
     <div class="d-flex justify-content-between w-100 py-2 px-2">
-        <a href="{{Auth::check() ? route('feed') : route('home')}}" class="h-pill h-pill-primary nav-link d-flex justify-content-between px-3 {{Route::currentRouteName() == 'feed' ? 'active' : ''}}">
+        <a href="{{Auth::check() ? route('feed') : route('feed.public')}}" class="h-pill h-pill-primary nav-link d-flex justify-content-between px-3 {{in_array(Route::currentRouteName(), ['feed', 'feed.public']) ? 'active' : ''}}">
             <div class="d-flex justify-content-center align-items-center">
                 <div class="icon-wrapper d-flex justify-content-center align-items-center">
                     @include('elements.icon',['icon'=>'home-outline','variant'=>'large'])
@@ -8,7 +8,7 @@
             </div>
         </a>
         @if(Auth::check())
-            <a href="{{route('my.notifications')}}" class="h-pill h-pill-primary nav-link d-flex justify-content-between px-3 {{Route::currentRouteName() == 'my.notifications' ? 'active' : ''}}">
+            <a href="{{route('my.notifications')}}" class="h-pill h-pill-primary nav-link d-flex justify-content-between px-3 {{Route::currentRouteName() == 'my.notifications' ? 'active' : ''}}"> 
                 <div class="d-flex justify-content-center align-items-center">
                     <div class="icon-wrapper d-flex justify-content-center align-items-center position-relative">
                         @include('elements.icon',['icon'=>'notifications-outline','variant'=>'large'])

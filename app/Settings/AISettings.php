@@ -16,6 +16,17 @@ class AISettings extends Settings
 
     public ?string $open_ai_model;
 
+    // AI Auto Reply settings
+    public bool $ai_auto_reply_enabled;
+
+    public ?string $ai_auto_reply_model;
+
+    public ?string $ai_auto_reply_system_prompt;
+
+    public ?int $ai_auto_reply_max_per_conversation;
+
+    public ?int $ai_auto_reply_context_messages;
+
     public static function group(): string
     {
         return 'ai';

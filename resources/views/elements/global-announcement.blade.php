@@ -2,7 +2,7 @@
     $announcement = GenericHelper::getLatestGlobalMessage();
     if($announcement){
         $isSticky = $announcement->is_sticky;
-        if(in_array(Route::currentRouteName(),['feed']) && \App\Providers\GenericHelperServiceProvider::isMobileDevice()){
+        if(in_array(Route::currentRouteName(), ['feed', 'feed.public']) && \App\Providers\GenericHelperServiceProvider::isMobileDevice()){
             $isSticky = true;
         }
     }

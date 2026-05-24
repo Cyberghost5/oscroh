@@ -2,9 +2,10 @@
 
 namespace App\Filament\Widgets;
 
+use Filament\Notifications\Notification;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Artisan;
-use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\File;
 
 class StorageSymlinkWarningWidget extends Widget
 {
@@ -14,34 +15,84 @@ class StorageSymlinkWarningWidget extends Widget
 
     public function getColumnSpan(): int|string|array
     {
-        return 2; // Or 2 if dashboard uses 2-column layout
+        return 2;
     }
 
     public function createSymlink(): void
     {
-        Artisan::call('storage:link');
+        $link   = public_path('storage');
+        $target = storage_path('app/public');
+
+        // Ensure the real target directory exists
+        if (!is_dir($target)) {
+            File::makeDirectory($target, 0755, true);
+        }
+
+        // If public/storage exists as a real directory (not a symlink),
+        // migrate its contents into storage/app/public then delete it.
+        if (file_exists($link) && !is_link($link) && is_dir($link)) {
+            // Copy files from public/storage → storage/app/public (no overwrite)
+            foreach (File::allFiles($link) as $file) {
+                $relative = $file->getRelativePathname();
+                $dest     = $target . DIRECTORY_SEPARATOR . $relative;
+
+                if (!File::exists($dest)) {
+                    File::ensureDirectoryExists(dirname($dest));
+                    File::copy($file->getRealPath(), $dest);
+                }
+            }
+
+            // Remove the real directory so storage:link can create the symlink
+            File::deleteDirectory($link);
+        }
+
+        $exitCode = Artisan::call('storage:link');
+
+        // Verify the symlink actually resolves to the right target
+        $resolvedLink   = realpath($link);
+        $resolvedTarget = realpath($target);
+        $success = $resolvedLink && $resolvedTarget
+            && strtolower(str_replace('\\', '/', $resolvedLink))
+            === strtolower(str_replace('\\', '/', $resolvedTarget));
+
+        if (!$success) {
+            Notification::make()
+                ->title('Could not create the symlink automatically.')
+                ->body('Please run `php artisan storage:link` from the command line as an administrator.')
+                ->danger()
+                ->send();
+            return;
+        }
 
         Notification::make()
-            ->title('Symlink created successfully.')
+            ->title('Storage symlink created successfully.')
             ->success()
             ->send();
 
-        $this->symlinkFixed = true; // ⬅️ update Livewire state
+        $this->symlinkFixed = true;
     }
 
     public static function canView(): bool
     {
-        $link = public_path('storage');
+        $link   = public_path('storage');
         $target = storage_path('app/public');
 
-        // Widget should show if:
-        // - the link doesn't exist
-        // - the resolved path of the link doesn't match the expected target
-        return !file_exists($link) || realpath($link) !== realpath($target);
-    }
+        if (!file_exists($link)) {
+            return true;
+        }
 
-    public function getViewData(): array
-    {
-        return []; // no variables needed if logic is in canView()
+        $resolvedLink   = realpath($link);
+        $resolvedTarget = realpath($target);
+
+        if (!$resolvedLink || !$resolvedTarget) {
+            return true;
+        }
+
+        // Normalize separators and casing for Windows compatibility
+        $normalize = fn (string $p): string =>
+            strtolower(rtrim(str_replace('\\', '/', $p), '/'));
+
+        return $normalize($resolvedLink) !== $normalize($resolvedTarget);
     }
 }
+

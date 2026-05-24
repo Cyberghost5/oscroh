@@ -54,6 +54,10 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'stripe_onboarding_verified',
         'stripe_onboarding_verified',
         'country_id',
+        'ai_auto_reply_enabled',
+        'ai_auto_reply_respond_to_paid',
+        'ai_auto_reply_delay_seconds',
+        'ai_auto_reply_system_prompt',
     ];
 
     /**
@@ -74,6 +78,9 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'email_verified_at' => 'datetime',
         'public_profile' => 'boolean',
         'settings' => 'array',
+        'ai_auto_reply_enabled' => 'boolean',
+        'ai_auto_reply_respond_to_paid' => 'boolean',
+        'ai_auto_reply_delay_seconds' => 'integer',
     ];
 
     /*

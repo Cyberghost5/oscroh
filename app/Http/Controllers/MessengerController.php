@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\NewUserMessage;
 use App\Http\Requests\SaveNewMessageRequest;
+use App\Jobs\ProcessAiReply;
 use App\Model\Attachment;
 use App\Model\Notification;
 use App\Model\Subscription;
@@ -469,6 +470,18 @@ class MessengerController extends Controller
 
         // Sending the message to the socket
         broadcast(new NewUserMessage(json_encode($payload), $senderID, $receiverID))->toOthers();
+
+        // Dispatch AI auto-reply if the receiver (creator) has the feature enabled
+        if (getSetting('ai.ai_auto_reply_enabled')) {
+            $aiCreator = User::find($receiverID);
+            if ($aiCreator && $aiCreator->ai_auto_reply_enabled) {
+                ProcessAiReply::dispatch(
+                    (int) $payload->id,
+                    (int) $receiverID,
+                    (int) $senderID
+                )->delay(now()->addSeconds((int) $aiCreator->ai_auto_reply_delay_seconds));
+            }
+        }
 
         $return = [
             'message' => $payload,
